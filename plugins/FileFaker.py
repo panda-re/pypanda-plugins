@@ -398,11 +398,9 @@ if __name__ == '__main__':
     faker = FileFaker(panda)
     faker.replace_file("/foo", FakeFile(fake_str))
 
-    new_str = "This is some new data"
-
     @panda.queue_blocking
-    def read_it():
-        global new_str
+    def driver():
+        new_str = "This is some new data"
 
         panda.revert_sync('root')
         data = panda.run_serial_cmd("cat /foo")
