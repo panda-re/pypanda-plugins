@@ -118,6 +118,7 @@ class Tester(ModeFilter):
 
 if __name__ == "__main__":
     from pandare import Panda
-    panda = Panda(generic="x86_64")
+    # Note the test is architecture-specific, otherwise different syscalls are issued
+    panda = Panda(generic="i386")
     test = Tester(panda)
     test.run_guest()
