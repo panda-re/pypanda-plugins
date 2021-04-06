@@ -3,6 +3,8 @@
 import sys
 import logging
 
+from pandare import ffi
+
 # TODO: only for logger, should probably move it to a separate file
 from pandare.extras.file_hook import FileHook
 
@@ -26,7 +28,7 @@ def do_ioctl_init(panda):
     SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
     DIR_BITS = 2 if panda.arch_name != "ppc" else 3
 
-    panda.ffi.cdef("""
+    ffi.cdef("""
     struct IoctlCmdBits {
         uint8_t type_num:%d;
         uint8_t cmd_num:%d;
@@ -60,7 +62,7 @@ class Ioctl():
         '''
 
         do_ioctl_init(panda)
-        self.cmd = panda.ffi.new("union IoctlCmdUnion*")
+        self.cmd = ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
         self.osi = use_osi_linux
@@ -256,16 +258,18 @@ if __name__ == "__main__":
         # Setup faker
         ioctl_faker = IoctlFaker(panda, use_osi_linux=True)
 
-        # First revert to root snapshot, then type a command via serial
+        # First revert to root snapshot, then issue an IOCTL directly through perl - which is junk
+        # so the faker should fake it
         panda.revert_sync("root")
-        panda.run_serial_cmd("cd / && ls -l")
+        panda.run_serial_cmd("""perl -e 'require "sys/ioctl.ph"; ioctl(1, 0, 1);'""")
 
         # Check faker's results
         faked_rets = ioctl_faker.get_forced_returns()
         normal_rets = ioctl_faker.get_unmodified_returns()
-        assert(len(fake_rets)), "No returns faked"
+        assert(len(faked_rets)), "No returns faked"
         assert(len(normal_rets)), "No normal returns"
         panda.end_analysis()
 
     panda.queue_async(run_cmd)
     panda.run()
+    print("Success")
