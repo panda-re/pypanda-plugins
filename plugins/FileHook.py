@@ -3,7 +3,6 @@
 import logging
 import sys
 from os import path
-import coloredlogs
 
 
 class FileHook:
@@ -35,7 +34,11 @@ class FileHook:
         self.use_osi = use_osi
 
         self.logger = logging.getLogger('panda.filehook')
-        coloredlogs.install(level='DEBUG')
+        try:
+            import coloredlogs
+            coloredlogs.install(level='WARN')
+        except ImportError:
+            pass
         self.pending_virt_read = None
 
         panda.load_plugin("syscalls2")
