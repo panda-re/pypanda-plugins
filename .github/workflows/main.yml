@@ -8,8 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [IoctlFaker, FileHook, ModeFilter]
-        #target: [IoctlFaker, FileHook, FileFaker, ModeFilter]
+        target: [IoctlFaker, FileHook, FileFaker, ModeFilter]
 
     steps:
     - uses: actions/checkout@v2 # Clones to $GITHUB_WORKSPACE
