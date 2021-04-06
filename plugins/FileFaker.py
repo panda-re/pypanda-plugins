@@ -411,44 +411,7 @@ if __name__ == '__main__':
         panda.run_serial_cmd(f'echo {new_str} > /foo')
         data = panda.run_serial_cmd("cat /foo")
         assert(new_str in data), f"Failed to update fake file /foo: {data}. Expected: {new_str}"
-
         panda.end_analysis()
 
     panda.run()
-    print("Successfully faked file /foo")
-
-if __name__ == '__main__':
-    from pandare import Panda
-
-    panda = Panda(generic="x86_64")
-
-    # Replace all syscalls that reference /foo with a custom string
-    fake_str = "Hello world. This is data generated from python!"
-    faker = FileFaker(panda)
-    faker.replace_file("/foo", FakeFile(fake_str))
-
-    new_str = "This is some new data"
-
-    @panda.ppp("syscalls2", "on_all_sys_return")
-    def syscall(cpu, pc, callno):
-        line = panda.serial_console.consume_partial()
-        if len(line) == 0 or line.startswith("strace"): # want to start at execve( for syntax highlighting
-            return
-        log(line, False)
-
-
-    @panda.queue_blocking
-    def read_it():
-        global new_str
-
-        panda.revert_sync('root')
-        data = panda.run_serial_cmd("strace cat /foo")
-        assert(fake_str in data), f"Failed to read fake file /foo: {data}"
-
-        panda.run_serial_cmd(f'echo {new_str} > /foo')
-        data = panda.run_serial_cmd("cat /foo")
-        assert(new_str in data), f"Failed to update fake file /foo: {data}. Expected: {new_str}"
-
-        panda.end_analysis()
-
-    panda.run()
+    print("Success")

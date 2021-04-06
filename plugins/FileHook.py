@@ -255,3 +255,22 @@ class FileHook:
         the filename. Exists to be overloaded by subclasses
         '''
         pass
+
+if __name__ == '__main__':
+    from pandare import Panda
+
+    panda = Panda(generic="x86_64")
+
+    # Reads to /does_not_exist should be redirected to /etc/issue
+    hook = FileHook(panda)
+    hook.rename_file("/does_not_exist", "/etc/issue")
+
+    @panda.queue_blocking
+    def read_it():
+        panda.revert_sync('root')
+        data = panda.run_serial_cmd("cat /does_not_exist")
+        assert("Ubuntu" in data), f"Hook failed"
+        panda.end_analysis()
+
+    panda.run()
+    print("Success")

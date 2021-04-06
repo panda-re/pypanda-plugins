@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2 # Clones to $GITHUB_WORKSPACE
-    - name: Test indiviaul plugins
+    - name: Test individual plugins
       uses: docker://pandare/panda:latest
       with:
         entrypoint: python
