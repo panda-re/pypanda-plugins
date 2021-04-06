@@ -60,7 +60,7 @@ class Ioctl():
         '''
 
         do_ioctl_init(panda)
-        self.cmd = ffi.new("union IoctlCmdUnion*")
+        self.cmd = panda.ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
         self.osi = use_osi_linux
