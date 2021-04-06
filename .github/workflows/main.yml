@@ -13,9 +13,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2 # Clones to $GITHUB_WORKSPACE
+    - name: Fetch default qcow
+      run: wget https://panda.re/qcows/linux/ubuntu/1604/x86_64/ubuntu_1604_x86_64.qcow
+
     - name: Test individual plugins
       uses: docker://pandare/panda:latest
       with:
-        entrypoint: python
-        args: plugins/${{ matrix.target }}.py
+        entrypoint: bash
+        args: -c "mkdir ~/.panda && cp *.qcow ~/.panda && python plugins/${{ matrix.target }}.py"
 

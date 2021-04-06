@@ -246,8 +246,8 @@ if __name__ == "__main__":
 
     from pandare import blocking, Panda
 
-    # No arguments, i386. Otherwise argument should be guest arch
-    generic_type = sys.argv[1] if len(sys.argv) > 1 else "i386"
+    # No arguments, x86_64. Otherwise argument should be guest arch
+    generic_type = sys.argv[1] if len(sys.argv) > 1 else "x86_64"
     panda = Panda(generic=generic_type)
 
     @blocking
