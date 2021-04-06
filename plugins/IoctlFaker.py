@@ -1,15 +1,13 @@
 import sys
 import logging
 
-from pandare import ffi
-
 # TODO: only for logger, should probably move it to a separate file
 from pandare.extras.file_hook import FileHook
 
 # TODO: Ability to fake buffers for specific commands
 
 ioctl_initialized = False
-def do_ioctl_init(arch_name):
+def do_ioctl_init(panda):
 
     '''
     One-time init for arch-specific bit-packed ioctl cmd struct.
@@ -23,10 +21,10 @@ def do_ioctl_init(arch_name):
     ioctl_initialized = True
     TYPE_BITS = 8
     CMD_BITS = 8
-    SIZE_BITS = 14 if arch_name != "ppc" else 13
-    DIR_BITS = 2 if arch_name != "ppc" else 3
+    SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
+    DIR_BITS = 2 if panda.arch_name != "ppc" else 3
 
-    ffi.cdef("""
+    panda.ffi.cdef("""
     struct IoctlCmdBits {
         uint8_t type_num:%d;
         uint8_t cmd_num:%d;
@@ -59,7 +57,7 @@ class Ioctl():
         Do unpacking, optionally using OSI for process and file name info.
         '''
 
-        do_ioctl_init(panda.arch_name)
+        do_ioctl_init(panda)
         self.cmd = ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
@@ -84,8 +82,8 @@ class Ioctl():
             proc = panda.plugins['osi'].get_current_process(cpu)
             proc_name_ptr = proc.name
             file_name_ptr = panda.plugins['osi_linux'].osi_linux_fd_to_filename(cpu, proc, panda.ffi.cast("int", fd))
-            self.proc_name = ffi.string(proc_name_ptr).decode(errors="ignore") if proc_name_ptr != ffi.NULL else "unknown"
-            self.file_name = ffi.string(file_name_ptr).decode(errors="ignore") if file_name_ptr != ffi.NULL else "unknown"
+            self.proc_name = panda.ffi.string(proc_name_ptr).decode(errors="ignore") if proc_name_ptr != panda.ffi.NULL else "unknown"
+            self.file_name = panda.ffi.string(file_name_ptr).decode(errors="ignore") if file_name_ptr != panda.ffi.NULL else "unknown"
         else:
             self.proc_name = None
             self.file_name = None
@@ -114,7 +112,7 @@ class Ioctl():
             self_str = ""
 
         bits = self.cmd.bits
-        direction = ffi.string(ffi.cast("enum ioctl_direction", bits.direction))
+        direction = panda.ffi.string(panda.ffi.cast("enum ioctl_direction", bits.direction))
         ioctl_desc = f"dir={direction},arg_size={bits.arg_size:x},cmd=0x{bits.cmd_num:x},type=0x{bits.type_num:x}"
         if (self.guest_ptr == None):
             self_str += f"ioctl({ioctl_desc}) -> {self.original_ret_code}"

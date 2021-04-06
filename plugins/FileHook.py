@@ -1,5 +1,4 @@
 import logging
-from pandare.ffi_importer import ffi
 from os import path
 
 # If coloredlogs is installed, use it
@@ -136,10 +135,10 @@ class FileHook:
             return None
         fname_s = None
         proc = self._panda.plugins['osi'].get_current_process(cpu)
-        if proc != ffi.NULL:
+        if proc != self._panda.ffi.NULL:
             fname = self._panda.plugins['osi_linux'].osi_linux_fd_to_filename(cpu, proc, self._panda.ffi.cast("int", fd))
-            if fname != ffi.NULL:
-                fname_s = ffi.string(fname).decode('utf8', 'ignore')
+            if fname != self._panda.ffi.NULL:
+                fname_s = self._panda.ffi.string(fname).decode('utf8', 'ignore')
         return fname_s
 
     def _gen_cb(self, name, fname_ptr_pos):
