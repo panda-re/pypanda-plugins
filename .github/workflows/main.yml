@@ -1,0 +1,20 @@
+name: Plugin Tests
+
+on:
+  [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [FileFaker, ModeFilter]
+
+    steps:
+    - uses: actions/checkout@v2 # Clones to $GITHUB_WORKSPACE
+    - name: Test indiviaul plugins
+      uses: docker://pandare/panda:latest
+      with:
+        entrypoint: python
+        args: plugins/${{ matrix.target }}.py
+
