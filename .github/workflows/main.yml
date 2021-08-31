@@ -16,5 +16,5 @@ jobs:
       uses: docker://pandare/panda:latest
       with:
         entrypoint: python
-        args: plugins/${{ matrix.target }}.py
+        args: scripts/${{ matrix.target }}.py
 
