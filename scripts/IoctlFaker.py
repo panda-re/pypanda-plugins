@@ -3,7 +3,7 @@
 import sys
 import logging
 
-from pandare import ffi
+#from pandare import ffi
 
 # TODO: only for logger, should probably move it to a separate file
 from pandare.extras.file_hook import FileHook
@@ -28,7 +28,7 @@ def do_ioctl_init(panda):
     SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
     DIR_BITS = 2 if panda.arch_name != "ppc" else 3
 
-    ffi.cdef("""
+    panda.ffi.cdef("""
     struct IoctlCmdBits {
         uint8_t type_num:%d;
         uint8_t cmd_num:%d;
@@ -62,7 +62,7 @@ class Ioctl():
         '''
 
         do_ioctl_init(panda)
-        self.cmd = ffi.new("union IoctlCmdUnion*")
+        self.cmd = panda.ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
         self.osi = use_osi_linux
