@@ -6,7 +6,7 @@ import logging
 #from pandare import ffi
 
 # TODO: only for logger, should probably move it to a separate file
-from pandare.extras.file_hook import FileHook
+from pandare.extras import FileHook
 
 # TODO: Ability to fake buffers for specific commands
 
