@@ -1,0 +1,68 @@
+<html>
+<body>
+<!doctype html>
+<html>
+ <head>
+   <title>vis.js Graph demo</title>
+        <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+        <script src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+<body>
+ <div id="graph"></div> 
+ <script type="text/javascript" charset="utf-8">
+$(document).ready(function(){
+  // provide data in the DOT language
+  var DOTstring = `{{chart_output|safe}}`;
+  var parsedData = vis.parseDOTNetwork(DOTstring);
+
+  nodes = new vis.DataSet(parsedData.nodes);
+  edges = new vis.DataSet(parsedData.edges);
+  
+  var data = {
+        nodes: nodes,
+       edges: edges
+  };
+  
+  var options = parsedData.options;
+  var container = document.getElementById('graph');
+  options = {layout:{improvedLayout:false}};
+  
+  // create a network
+  var network = new vis.Network(container, data, options);
+    //connect to the socket server.
+    var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+    var numbers_received = [];
+
+    //receive details from server
+    socket.on('newprocess', function(msg) {
+        console.log( msg );
+    	if (typeof msg.pproc !== 'undefined' && typeof msg.child !== 'undefined'){
+          pproc = msg.pproc;
+           child = msg.child;
+          if (msg.operation == "add"){
+              console.log("Adding pair of type "+ msg.pproc +" " +msg.child);
+              try{
+                  nodes.add({id:child,label:child});
+                  edges.add({to:child, from:pproc});
+              }catch (err){
+                  console.log("node already in list");
+              }
+          }else{
+              console.log("Removing pair of type "+ msg.pproc +" " +msg.child);
+              try{
+                  nodes.remove({id:child,label:child});
+                  edges.remove({to:child, from:pproc});
+              } catch (err){
+                console.log("node tried to remove something not in list");
+              }
+          }
+    	}else{
+            console.log("pproc or child is undefined");
+        }
+    });
+});
+ </script>
+</body>
+</html>
