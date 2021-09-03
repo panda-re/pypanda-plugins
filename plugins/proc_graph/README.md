@@ -20,7 +20,3 @@ panda-system-x86_64 -panda "snake_hook:files=proc_graph.py,flask=1" \
 (**Note:** this uses the x86_64 bionic qcow located [here](https://panda.re/qcows/linux/ubuntu/1804/x86_64/bionic-server-cloudimg-amd64-noaslr-nokaslr.qcow2) however it may have already been downloaded for you in . Tested against the [head of PANDA's dev branch](https://github.com/panda-re/panda/commit/1a9d9ad51f10c8b7890447383df1b5d6ed8e38dd).
 
 Then navigate to http://localhost:8080/LiveProcGraph/ to view the process graph.
-
-### Currently Known Issues
-
-* Running the plugin before processes are available from OSI may result in a segfault

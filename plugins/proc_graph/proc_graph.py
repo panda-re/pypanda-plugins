@@ -145,6 +145,7 @@ class LiveProcGraph(PandaPlugin):
         global ffi
 
         ffi = panda.ffi
+
         @panda.cb_asid_changed
         def asid_changed(env, old_asid, new_asid):
             nonlocal panda
@@ -181,6 +182,14 @@ class LiveProcGraph(PandaPlugin):
             if datetime.now() - time_start > timedelta(seconds=time_stop):
                 panda.end_analysis()
             return 0
+
+        panda.disable_callback("asid_changed")
+
+        @panda.ppp("syscalls2", "on_all_sys_enter")
+        def first_syscall(cpu, pc, callno):
+            panda.disable_ppp("first_syscall")
+            panda.enable_callback("asid_changed")
+
 
     def webserver_init(self, app):
         global socketio
