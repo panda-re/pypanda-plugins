@@ -23,7 +23,7 @@ class BasicBlockCount(PandaPlugin):
                 <script>
                     var bb_count = document.getElementById("bb_count");
                     setInterval(() => {
-                        fetch("./bb_count")
+                        fetch(window.location.pathname.replace(/\/$/, "") + "/bb_count")
                             .then(resp => resp.text())
                             .then(text => {
                                 bb_count.innerText = text;
