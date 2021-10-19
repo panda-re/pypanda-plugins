@@ -2,19 +2,14 @@
 
 # Example script to use proc_graph from a pypanda script
 from pandare import Panda
-from pandare.extras import Snake, PandaPlugin
-
 panda = Panda(generic="x86_64")
 
-s = Snake(panda, flask=True, host='0.0.0.0')
-
-LiveProcGraph = s.load_plugin_class("proc_graph.py", 'LiveProcGraph')
-s.register(LiveProcGraph)
-
+panda.pyplugin.enable_flask(host='0.0.0.0')
+LiveProcGraph = panda.pyplugin.load_plugin_class("proc_graph.py", 'LiveProcGraph')
+panda.pyplugin.register(LiveProcGraph)
 # Alternatively, just register the (path, classname) directly
-#s.register(("proc_graph.py", 'LiveProcGraph'))
-
-s.serve()
+#panda.pyplugin.register(("proc_graph.py", 'LiveProcGraph'))
+panda.pyplugin.serve()
 
 @panda.queue_blocking
 def driver():
