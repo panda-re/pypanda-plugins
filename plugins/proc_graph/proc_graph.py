@@ -140,7 +140,8 @@ def emitEvents():
             socketio.emit('newprocess', {'operation': 'remove', 'pproc': str(parent), 'child': str(p)}, namespace='/test')
         socketio.sleep(0.1)
 
-class LiveProcGraph(PandaPlugin):
+from pandare import PyPlugin
+class LiveProcGraph(PyPlugin):
     def __init__(self, panda):
         global ffi
 

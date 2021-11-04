@@ -5,7 +5,7 @@ Standalone Python plugins for [PANDA](https://github.com/panda-re/panda)'s Pytho
 
 They are separated into two directories:
 
-* plugins - snake_hook-compaible pypanda plugins
+* plugins - PyPlugins
 * scripts - libraries and scripts designed for use with standalone pypanda scripts
 
 ## Plugins

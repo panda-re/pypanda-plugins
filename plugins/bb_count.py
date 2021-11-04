@@ -1,4 +1,6 @@
-class BasicBlockCount(PandaPlugin):
+from pandare import PyPlugin
+
+class BasicBlockCount(PyPlugin):
     def __init__(self, panda):
         self.bb_count = 0
 
