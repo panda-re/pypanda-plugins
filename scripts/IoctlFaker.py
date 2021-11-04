@@ -2,11 +2,12 @@
 
 import sys
 import logging
+from pandare import PyPlugin
+
+from cffi import FFI
+ffi = FFI()
 
 #from pandare import ffi
-
-# TODO: only for logger, should probably move it to a separate file
-from pandare.extras import FileHook
 
 # TODO: Ability to fake buffers for specific commands
 
@@ -28,7 +29,7 @@ def do_ioctl_init(panda):
     SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
     DIR_BITS = 2 if panda.arch_name != "ppc" else 3
 
-    panda.ffi.cdef("""
+    ffi.cdef("""
     struct IoctlCmdBits {
         uint8_t type_num:%d;
         uint8_t cmd_num:%d;
@@ -62,7 +63,7 @@ class Ioctl():
         '''
 
         do_ioctl_init(panda)
-        self.cmd = panda.ffi.new("union IoctlCmdUnion*")
+        self.cmd = ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
         self.osi = use_osi_linux
@@ -140,23 +141,14 @@ class Ioctl():
 
         return hash((self.cmd.asUnsigned32, self.has_buf, self.guest_ptr, self.guest_buf, self.proc_name, self.file_name))
 
-class IoctlFaker():
+class IoctlFaker(PyPlugin):
 
     '''
     Interpose ioctl() syscall returns, forcing successes for specific error codes to simulate missing drivers/peripherals.
     Bin all returns into failures (needed forcing) and successes, store for later retrival/analysis.
     '''
 
-    def __init__(
-            self,
-            panda,
-            use_osi_linux = False,
-            log = False,
-            ignore = [],
-            intercept_ret_vals = [-25],
-            intercept_all_non_zero = False
-        ):
-
+    def __init__(self, panda):
         '''
         Log enables/disables logging.
         ignore contains a list of tuples (filename, cmd#) to be ignored.
@@ -165,13 +157,14 @@ class IoctlFaker():
         intercept_all_non_zero is aggressive setting that takes precedence if set - any non-zero return code id changed to zero.
         '''
 
-        self.osi = use_osi_linux
+        self.osi = self.get_arg_bool('use_osi_linux')
+        self._log = self.get_arg_bool('log')
+
         self._panda = panda
         self._panda.load_plugin("syscalls2")
-        self._log = log
-        self.ignore = ignore
-        self.intercept_ret_vals = intercept_ret_vals
-        self.intercept_all_non_zero = intercept_all_non_zero
+        self.ignore = []
+        self.intercept_ret_vals = [-25]
+        self.intercept_all_non_zero = self.get_arg_bool('intercept_all_non_zero')
 
         if self.osi:
             self._panda.load_plugin("osi")
@@ -252,11 +245,11 @@ if __name__ == "__main__":
     generic_type = sys.argv[1] if len(sys.argv) > 1 else "x86_64"
     panda = Panda(generic=generic_type)
 
-    @blocking
-    def run_cmd():
+    # Setup faker
+    panda.pyplugins.load(IoctlFaker, {'use_osi_linux': True})
 
-        # Setup faker
-        ioctl_faker = IoctlFaker(panda, use_osi_linux=True)
+    @panda.queue_blocking
+    def driver():
 
         # First revert to root snapshot, then issue an IOCTL directly through perl - which is junk
         # so the faker should fake it
@@ -264,12 +257,11 @@ if __name__ == "__main__":
         panda.run_serial_cmd("""perl -e 'require "sys/ioctl.ph"; ioctl(1, 0, 1);'""")
 
         # Check faker's results
-        faked_rets = ioctl_faker.get_forced_returns()
-        normal_rets = ioctl_faker.get_unmodified_returns()
+        faked_rets = panda.pyplugins.plugins['IoctlFaker'].get_forced_returns()
+        normal_rets =panda.pyplugins.plugins['IoctlFaker'].get_unmodified_returns()
         assert(len(faked_rets)), "No returns faked"
         assert(len(normal_rets)), "No normal returns"
         panda.end_analysis()
 
-    panda.queue_async(run_cmd)
     panda.run()
     print("Success")
