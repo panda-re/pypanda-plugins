@@ -1,4 +1,5 @@
 from pandare import PyPlugin
+import os
 
 class CallstackInfo:
     calls = []
@@ -8,7 +9,7 @@ class CallstackInfo:
     freeze = -1
     freeze_name = ''
 
-    def __init__(self, panda, proc_name, skip_libraries = [], skip_kernel=True, logging=False, track=10):
+    def __init__(self, panda, proc_name, skip_libraries = [], skip_kernel=True, logging=False, ddir=None, track=10):
         self.panda = panda
         self.addr_size = int(self.panda.bits / 8)
         self.cutoff = 0xc << self.panda.bits
@@ -16,8 +17,16 @@ class CallstackInfo:
         self.skip_libs = skip_libraries
         self.skip_kern = skip_kernel
         self.log = logging
+
         if self.log:
-            open(self.name + '.calls', 'w').close()
+            if ddir == None:
+                self.dmp_path = os.path.join(os.getcwd(), 'calls_dmp')
+            else:
+                self.dmp_path = os.path.join(os.getcwd(), ddir)
+            if not os.path.exists(self.dmp_path):
+                os.mkdir(self.dmp_path)
+            self.outf = os.path.join(self.dmp_path, self.name + '.calls')
+            open(self.outf, 'w').close()
         self.max = track
 
     def skip(self, name):
@@ -43,7 +52,7 @@ class CallstackInfo:
 
         pre, skip, line = self.build_line(addr, owner, offset, args)
         if self.log:
-            with open(self.name+'.calls', 'a') as f:
+            with open(self.outf, 'a') as f:
                 f.write(skip)
                 f.write(pre + line)
         if len(self.calls) < self.max:
@@ -146,6 +155,7 @@ class CallstackTracker(PyPlugin):
             self.logging = False
         self.show_stack_addr = self.get_arg('show_stack_addr')
         self.procs = []
+        
 
         if not "syscalls2" in panda.plugins:
             print("Syscalls2 not yet loaded, loading now")
