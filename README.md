@@ -5,8 +5,27 @@ Standalone Python plugins for [PANDA](https://github.com/panda-re/panda)'s Pytho
 
 They are separated into two directories:
 
-* plugins - PyPlugins
+* src/pyplugins - PyPlugins
 * scripts - libraries and scripts designed for use with standalone pypanda scripts
+
+## Install
+Optional Virtualenv Setup
+```sh
+python3 -m venv venv
+. venv/bin/activate
+```
+
+Install PANDA from source and build (not shown), then install PyPanda (with `develop` or `install`)
+```ssh
+cd panda/panda/python/core/pandare
+python setup.py develop
+```
+
+Install this PyPlugins package (with `develop` or `install`)
+```py
+cd panda-pyplugins/
+python setup.py develop
+```
 
 ## Plugins
 

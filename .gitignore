@@ -1,3 +1,7 @@
 *.pyc
 *.sw*
 *-rr-*
+.venv
+build/
+dist/
+src/*.egg-info/
