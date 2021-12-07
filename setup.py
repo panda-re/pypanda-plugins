@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 
-setup(name='pandare_pyplugins',
+setup(name='pandarepyplugins',
       version='0.0.1',
       description='A collection of reusable PyPlugins for PANDA.re',
       author='Andrew Fasano',
