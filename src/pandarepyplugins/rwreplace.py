@@ -10,6 +10,7 @@ class ReadWriteReplace(PyPlugin):
         self.proc_replaces = {} # procname => key => value
         self.enabled = False
         self.just_clobbered = None
+        self.verbose = self.get_arg_bool("verbose")
 
         @panda.ppp("syscalls2", "on_sys_write_enter")
         def handle_write(cpu, pc, fd, buf, count):
@@ -77,6 +78,7 @@ class ReadWriteReplace(PyPlugin):
 
     def do_replace(self, cpu, s, read=False):
         name = "read" if read else "write"
+        orig_s = s
 
         if len(self.proc_replaces):
             proc = self.panda.plugins['osi'].get_current_process(cpu)
@@ -95,6 +97,9 @@ class ReadWriteReplace(PyPlugin):
                 if find in s:
                     match = True
                     s = s.replace(find, replace)
+        if self.verbose and s != orig_s:
+            print(f"[ReadWriteReplace] on {name} replaced {repr(orig_s)} with {repr(s)}")
+
         return s
 
     @PyPlugin.ppp_export
