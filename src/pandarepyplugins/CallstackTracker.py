@@ -50,7 +50,7 @@ class CallstackInfo:
         for i in range(0, 4):
             args.append(self.panda.arch.get_arg(cpu, i))
 
-        pre, skip, line = self.build_line(addr, owner, offset, args)
+        pre, skip, line = self.build_line(cpu, addr, owner, offset, args)
         if self.log:
             with open(self.outf, 'a') as f:
                 f.write(skip)
@@ -103,7 +103,7 @@ class CallstackInfo:
         off = addr - base
         return owner, base, off, False
 
-    def build_line(self, addr, owner, off, args):
+    def build_line(self, cpu, addr, owner, off, args):
         #prefix = '-'*self.depth + '>'
         prefix = f"depth: {self.depth} | "
         fin_args = '('
@@ -174,7 +174,7 @@ class CallstackTracker(PyPlugin):
             proc.handle_ret(func)
 
         if self.show_stack_addr != None:
-            @panda.hook(show_stack_addr, kernel = True)
+            @panda.hook(self.show_stack_addr, kernel = True)
             def show_stack_print(cpu, tb, h):
                 current = self.get_proc_name(cpu)
                 proc = self.check_proc(current)

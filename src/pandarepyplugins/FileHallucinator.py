@@ -364,7 +364,7 @@ class FileFaker(PyPlugin):
                     getattr(tmp_faker, f"handle_{sc_name}")(panda, cpu, pc, *inner_args)
                 elif rv < 0 and hasattr(tmp_faker, 'silence_unhandled_errors') and tmp_faker.silence_unhandled_errors:
                     # Unhandled and it's returning an error - zero depending on silence_unhandled_errors
-                    self.logger.info(f"{sc_name} on {realname} wants to return {rv}. Zeroing error")
+                    self.logger.info(f"{sc_name} on {this_fname} wants to return {rv}. Zeroing error")
                     self.panda.arch.set_retval(cpu, 0, convention='syscall', failure=False)
 
     def enter_file_descriptor(self, panda, cpu, arg_idx, this_fd, sc_name):
@@ -392,6 +392,7 @@ class FileFaker(PyPlugin):
         # If the faker has an _enter method, we'll call that
         realname, faker = self.active_hooks[asid][this_fd]
         if hasattr(faker, f"handle_{sc_name}_enter"):
+            pc = panda.current_pc(cpu)
             self.logger.info(f"Using {type(faker).__name__} to handle enter of {sc_name} called on fd {this_fd} based off of {realname}")
             getattr(faker, f"handle_{sc_name}_enter")(panda, cpu, pc)
 

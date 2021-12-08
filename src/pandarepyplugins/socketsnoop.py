@@ -87,7 +87,7 @@ class AbstractSocket():
             except:
                 sread = "NOT_A_STRING"
             try:
-                cread = self.panda.read_str(cpu, msghdr[msg_control] + 12)
+                cread = self.panda.read_str(cpu, msghdr['msg_control'] + 12)
             except:
                 cread = "NOT_A_STRING"
             msgs.append(read)
@@ -346,10 +346,11 @@ class SocketSnoop(PyPlugin):
                     smsg = 'ERROR_PANDA'
                 with open("sock.txt", 'a') as f:
                     proc, proc_obj = self.get_proc_name(cpu)
-                    f.write(f"{proc}: RECV(fd: 0x{fd:x}, msg: 0x{msg:x} [{smgg}], length: 0x{length:x}, flags: 0x{flags:x})\n")
+                    f.write(f"{proc}: RECV(fd: 0x{fd:x}, msg: 0x{msg:x} [{smsg}], length: 0x{length:x}, flags: 0x{flags:x})\n")
 
             #@self.panda.ppp("syscalls2", "on_sys_accept_enter")
             def accept_enter_record(cpu, pc, fd, addr, addrlen):
+                fd_ret =  self.panda.arch.get_return_value(cpu)
                 proc, proc_obj = self.get_proc_name(cpu)
                 s = self.find_sock(cpu, proc_obj, proc, fd, "accept", addr=addr, addrlen=addrlen)
                 try:
