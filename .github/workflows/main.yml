@@ -25,7 +25,9 @@ jobs:
 
   fetch_container:
     runs-on: ubuntu-latest
-    run: docker pull pandare/panda:latest
+    steps:
+    - name: Fetch pandare container
+      run: docker pull pandare/panda:latest
 
 
   test:
