@@ -23,13 +23,6 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-  fetch_container:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Fetch pandare container
-      run: docker pull pandare/panda:latest
-
-
   test:
     runs-on: ubuntu-latest
     needs: [fetch_container]
