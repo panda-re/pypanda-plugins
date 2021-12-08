@@ -140,6 +140,8 @@ class FileFaker(PyPlugin):
 
     usage:
         panda = Panda(...)
+        from pandarepyplugins.FileHallucinator import FileFaker, FakeDiskState, FakeFile
+
         panda.pyplugins.load(FileFaker)
         my_file = FakeDiskState(b"Hello world")
         panda.pyplugins.ppp.FileFaker.halcuinate_file("/rename_this", FakeFile, my_file)
