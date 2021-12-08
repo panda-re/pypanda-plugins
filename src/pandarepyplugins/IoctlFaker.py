@@ -3,52 +3,11 @@
 import sys
 import logging
 from pandare import PyPlugin
-
 from cffi import FFI
-ffi = FFI()
 
 #from pandare import ffi
 
 # TODO: Ability to fake buffers for specific commands
-
-ioctl_initialized = False
-def do_ioctl_init(panda):
-
-    '''
-    One-time init for arch-specific bit-packed ioctl cmd struct.
-    '''
-
-    # Default config (x86, x86-64, ARM, AArch 64) with options for PPC
-    global ioctl_initialized
-    if ioctl_initialized:
-        return
-
-    ioctl_initialized = True
-    TYPE_BITS = 8
-    CMD_BITS = 8
-    SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
-    DIR_BITS = 2 if panda.arch_name != "ppc" else 3
-
-    ffi.cdef("""
-    struct IoctlCmdBits {
-        uint8_t type_num:%d;
-        uint8_t cmd_num:%d;
-        uint16_t arg_size:%d;
-        uint8_t direction:%d;
-    };
-
-    union IoctlCmdUnion {
-        struct IoctlCmdBits bits;
-        uint32_t asUnsigned32;
-    };
-
-    enum ioctl_direction {
-        IO = 0,
-        IOW = 1,
-        IOR = 2,
-        IOWR = 3
-    };
-    """ % (TYPE_BITS, CMD_BITS, SIZE_BITS, DIR_BITS), packed=True)
 
 class Ioctl():
 
@@ -62,8 +21,9 @@ class Ioctl():
         Do unpacking, optionally using OSI for process and file name info.
         '''
 
-        do_ioctl_init(panda)
-        self.cmd = ffi.new("union IoctlCmdUnion*")
+        self.ffi = FFI()
+        self._do_ioctl_init(panda)
+        self.cmd = self.ffi.new("union IoctlCmdUnion*")
         self.cmd.asUnsigned32 = cmd
         self.original_ret_code = None
         self.osi = use_osi_linux
@@ -92,6 +52,33 @@ class Ioctl():
         else:
             self.proc_name = None
             self.file_name = None
+
+    def _do_ioctl_init(self, panda):
+        TYPE_BITS = 8
+        CMD_BITS = 8
+        SIZE_BITS = 14 if panda.arch_name != "ppc" else 13
+        DIR_BITS = 2 if panda.arch_name != "ppc" else 3
+
+        self.ffi.cdef("""
+        struct IoctlCmdBits {
+            uint8_t type_num:%d;
+            uint8_t cmd_num:%d;
+            uint16_t arg_size:%d;
+            uint8_t direction:%d;
+        };
+
+        union IoctlCmdUnion {
+            struct IoctlCmdBits bits;
+            uint32_t asUnsigned32;
+        };
+
+        enum ioctl_direction {
+            IO = 0,
+            IOW = 1,
+            IOR = 2,
+            IOWR = 3
+        };
+        """ % (TYPE_BITS, CMD_BITS, SIZE_BITS, DIR_BITS), packed=True)
 
     def get_ret_code(self, panda, cpu):
 
@@ -217,6 +204,7 @@ class IoctlFaker(PyPlugin):
         else:
             return source
 
+    @PyPlugin.ppp_export
     def get_forced_returns(self, with_buf_only = False):
 
         '''
@@ -225,6 +213,7 @@ class IoctlFaker(PyPlugin):
 
         return self._get_returns(self._forced_returns, with_buf_only)
 
+    @PyPlugin.ppp_export
     def get_unmodified_returns(self, with_buf_only = False):
 
         '''
@@ -250,15 +239,14 @@ if __name__ == "__main__":
 
     @panda.queue_blocking
     def driver():
-
         # First revert to root snapshot, then issue an IOCTL directly through perl - which is junk
         # so the faker should fake it
         panda.revert_sync("root")
         panda.run_serial_cmd("""perl -e 'require "sys/ioctl.ph"; ioctl(1, 0, 1);'""")
 
         # Check faker's results
-        faked_rets = panda.pyplugins.plugins['IoctlFaker'].get_forced_returns()
-        normal_rets =panda.pyplugins.plugins['IoctlFaker'].get_unmodified_returns()
+        faked_rets =  panda.pyplugins.ppp.IoctlFaker.get_forced_returns()
+        normal_rets = panda.pyplugins.ppp.IoctlFaker.get_unmodified_returns()
         assert(len(faked_rets)), "No returns faked"
         assert(len(normal_rets)), "No normal returns"
         panda.end_analysis()
