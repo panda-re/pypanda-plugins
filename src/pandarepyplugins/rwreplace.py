@@ -26,7 +26,7 @@ class ReadWriteReplace(PyPlugin):
             if s != orig_s:
                 clobbered = None
                 try:
-                    clobbered = panda.virtual_meomry_read(cpu, buf, len(s))
+                    clobbered = panda.virtual_memory_read(cpu, buf, len(s))
                 except ValueError:
                     print(f"[ReadWriteReplace] Clobbering {len(s)-len(orig_s)} bytes and unable to cache")
 
@@ -63,7 +63,7 @@ class ReadWriteReplace(PyPlugin):
                 orig_s = panda.read_str(cpu, buf, count)
             except ValueError:
                 return
-            s = self.do_replace(cpu, orig_s)
+            s = self.do_replace(cpu, orig_s, read=True)
 
             if s != orig_s:
                 # Check if new buffer is still < count - is so we're good, otherwise clobber
@@ -75,12 +75,14 @@ class ReadWriteReplace(PyPlugin):
                 else:
                     panda.arch.set_arg(cpu, 3, len(s), convention='syscall')
 
-    def do_replace(self, cpu, s):
+    def do_replace(self, cpu, s, read=False):
+        name = "read" if read else "write"
+
         if len(self.proc_replaces):
             proc = self.panda.plugins['osi'].get_current_process(cpu)
             name = "error"
             if proc != self.panda.ffi.NULL:
-                name = self.panda.ffi.string(proc.name)
+                name = self.panda.ffi.string(proc.name).decode(errors='ignore')
 
             if name in self.proc_replaces:
                 for find, replace in self.proc_replaces[name].items():
@@ -124,3 +126,33 @@ class ReadWriteReplace(PyPlugin):
     def clear_proc(self, proc):
         del self.proc_replaces[proc]
 
+if __name__ == '__main__':
+    from pandare import Panda
+    panda = Panda(generic="arm")
+
+    panda.pyplugins.load(ReadWriteReplace)
+    @panda.queue_blocking
+    def driver():
+        panda.revert_sync("root")
+
+        panda.pyplugins.ppp.ReadWriteReplace.add("root:x", "BOOT:X")
+        out = panda.run_serial_cmd("cat /etc/passwd")
+        assert "BOOT:X" in out, f"Unexpected, no BOOT: in {out}"
+
+        panda.pyplugins.ppp.ReadWriteReplace.clear()
+
+        out = panda.run_serial_cmd("cat /etc/passwd")
+        assert "root:x" in out, f"Unexpected- no root: in {out}"
+
+        panda.pyplugins.ppp.ReadWriteReplace.add_proc("python", "root", "boot")
+
+        out = panda.run_serial_cmd("cat /etc/passwd")
+        assert "root:x" in out, f"Unexpected- no root in cat after python-specific change: in {out}"
+
+        out = panda.run_serial_cmd("python -c 'print(\"root\")'")
+        assert "boot" in out, f"Unexpected python should have printed boot, got {out}"
+
+        panda.end_analysis()
+
+    panda.run()
+    print("all tests passed")
