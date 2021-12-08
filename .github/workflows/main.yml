@@ -7,25 +7,14 @@ on:
     branches: [ 'main' ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-20.04
+  lint:
+    runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.8", "3.9"] # XXX pypanda doesn't work with 3.10
-        targets: ["FileHallucinator", "IoctlFaker", "netcb", "rwreplace"]
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-    - name: Install dependencies
+    - name: Install linter dependencies
       run: |
-        DEBIAN_FRONTEND=noninteractive sudo apt-get -y install --no-install-recommends $(wget https://raw.githubusercontent.com/panda-re/panda/dev/panda/dependencies/ubuntu%3A20.04_base.txt | grep -o '^[^#]*')
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
@@ -35,6 +24,17 @@ jobs:
         flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Run tests
-      run: |
-        python $GITHUB_WORKSPACE/src/pandarepyplugins/${{ matrix.targets }}.py
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        targets: ["FileHallucinator", "IoctlFaker", "netcb", "rwreplace"]
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: docker://pandare/panda:latest
+      with:
+        entrypoint: python
+        args: src/pandarepyplugins/${{ matrix.target }}.py
