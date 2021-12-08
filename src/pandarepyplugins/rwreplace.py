@@ -5,6 +5,7 @@ class ReadWriteReplace(PyPlugin):
     Replace strings as they are read/written from/to files.
     '''
     def __init__(self, panda):
+        self.panda = panda
         self.replaces = {} # key => value
         self.proc_replaces = {} # procname => key => value
         self.enabled = False
