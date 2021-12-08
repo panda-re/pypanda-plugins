@@ -25,8 +25,7 @@ jobs:
         cache: 'pip'
     - name: Install dependencies
       run: |
-        sudo apt-get install qemu
-        sudo apt-get install -y libvdeplug-dev libpng16-16 libsdl2-2.0-0 libvirglrenderer1
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -y install --no-install-recommends $(wget https://raw.githubusercontent.com/panda-re/panda/dev/panda/dependencies/ubuntu%3A20.04_base.txt | grep -o '^[^#]*')
         python -m pip install --upgrade pip
         python -m pip install flake8 pytest
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
