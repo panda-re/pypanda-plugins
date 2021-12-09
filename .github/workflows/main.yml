@@ -25,7 +25,6 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: [fetch_container]
     strategy:
       fail-fast: true
       matrix:
