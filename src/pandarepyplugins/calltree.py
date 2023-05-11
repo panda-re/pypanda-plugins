@@ -24,7 +24,7 @@ class CallTree(PyPlugin):
 
             result = self.get_calltree(cpu) + " => " + ' '.join(argv)
             if self.outfile:
-                with open(result, "a") as f:
+                with open(self.outfile, "a") as f:
                     f.write(result+"\n")
             else:
                 print(result)
